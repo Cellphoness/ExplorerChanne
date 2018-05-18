@@ -1,0 +1,40 @@
+{
+  "name": "ExplorerChannel",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "color": "^3.0.0",
+    "hoist-non-react-statics": "^2.5.0",
+    "moment": "^2.22.1",
+    "prop-types": "^15.6.1",
+    "react": "16.3.1",
+    "react-native": "0.55.3",
+    "react-native-dropdownalert": "^3.4.0",
+    "react-native-extended-stylesheet": "^0.8.1",
+    "react-native-update": "^5.0.0",
+    "react-native-view-shot": "^2.3.0",
+    "react-navigation": "^1.5.12",
+    "react-redux": "^5.0.7",
+    "redux": "^4.0.0",
+    "redux-logger": "^3.0.6"
+  },
+  "devDependencies": {
+    "babel-jest": "22.4.3",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "22.4.3",
+    "react-test-renderer": "16.3.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  },
+  "rnpm": {
+    "assets": [
+      "./assets/fonts/",
+      "./assets/fonts/Roboto/"
+    ]
+  }
+}
