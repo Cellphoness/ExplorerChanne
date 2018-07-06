@@ -1,7 +1,7 @@
 import React, {
     Component,
   } from 'react';
-  
+
   import {
     AppRegistry,
     StyleSheet,
@@ -12,7 +12,7 @@ import React, {
     TouchableOpacity,
     Linking,
   } from 'react-native';
-  
+
   import {
     isFirstTime,
     isRolledBack,
@@ -24,10 +24,10 @@ import React, {
     switchVersionLater,
     markSuccess,
   } from 'react-native-update';
-  
+
   import _updateConfig from '../../update.json';
   const {appKey} = _updateConfig[Platform.OS];
-  
+
   export default class MyProject extends Component {
     componentWillMount(){
       if (isFirstTime) {
@@ -46,12 +46,14 @@ import React, {
           {text: '否',},
           {text: '下次启动时', onPress: ()=>{switchVersionLater(hash);}},
         ]);
-      }).catch(err => { 
+      }).catch(err => {
         Alert.alert('提示', '更新失败.');
+        console.log(err);
       });
     };
     checkUpdate = () => {
       checkUpdate(appKey).then(info => {
+        console.log('info:', info);
         if (info.expired) {
           Alert.alert('提示', '您的应用版本已更新,请前往应用商店下载新的版本', [
             {text: '确定', onPress: ()=>{info.downloadUrl && Linking.openURL(info.downloadUrl)}},
@@ -64,7 +66,7 @@ import React, {
             {text: '否',},
           ]);
         }
-      }).catch(err => { 
+      }).catch(err => {
         Alert.alert('提示', '更新失败.');
       });
     };
@@ -88,7 +90,7 @@ import React, {
       );
     }
   }
-  
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -107,4 +109,3 @@ import React, {
       marginBottom: 5,
     },
   });
-  

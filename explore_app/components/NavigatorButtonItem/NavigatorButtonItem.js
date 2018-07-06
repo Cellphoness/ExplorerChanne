@@ -5,7 +5,7 @@ import { Image, TouchableHighlight, View } from 'react-native';
 import { connectBDrawer } from '../BottomDrawer';
 
 class NavigatorButtonItem extends Component {
-    
+
     static propTypes = {
         left: PropTypes.bool,
         right: PropTypes.bool,
@@ -23,13 +23,13 @@ class NavigatorButtonItem extends Component {
     }
 
     render() {
-      const { source, left, right } = this.props;
+      const { source, left, right, onPress } = this.props;
       let handler;
       if (left == true) {
-          handler = this.leftHandelr;
+          handler = this.leftHandelr
       }
-      if (right == true) {
-          handler = this.rightHandler;
+      if (onPress) {
+         handler = onPress
       }
 
       return (

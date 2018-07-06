@@ -13,10 +13,12 @@
 
 @implementation AppDelegate
 
+// 新MD5: b4214e161e84542f7cf4fe8765ce0f66
+// FiweDcUzRBRYXj2lMJ4N5ZL94kZ7
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
   NSURL *jsCodeLocation;
-  
+
 #if DEBUG
   // 原来的jsCodeLocation保留在这里
     jsCodeLocation = [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index" fallbackResource:nil];

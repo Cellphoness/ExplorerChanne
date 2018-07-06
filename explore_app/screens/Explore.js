@@ -6,6 +6,13 @@ import data from '../data/data';
 import { ShopBigCell, ShopCardCell, ShopLongCell, ShopBottomCell } from '../components/ShopCell';
 import { ShopBanner } from '../components/ShopBanner';
 import { connectBDrawer } from '../components/BottomDrawer';
+import { NavigatorButtonItem as ButtonItems } from '../components/NavigatorButtonItem';
+
+const headerTitleStyle = {
+    fontFamily: "Roboto-Bold",
+  	fontSize: 14,
+  	color: "#262628"
+};
 
 class Explore extends Component {
 
@@ -13,25 +20,40 @@ class Explore extends Component {
         ds : new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
     }
 
+    static navigationOptions = ({ navigation }) => ({
+      headerTitle: 'Explore',
+      headerTitleStyle: headerTitleStyle,
+      headerLeft: (
+          <ButtonItems
+              left
+              source={require('../components/NavigatorButtonItem/images/icon-category.png')}
+          />),
+          headerRight: (
+          <ButtonItems
+              onPress = { () => {navigation.navigate('HotUpdate')} }
+              source={require('../components/NavigatorButtonItem/images/icon-search.png')}
+          />)
+    });
+
     static propTypes = {
         navigation: PropTypes.object,
         addTargetFunc: PropTypes.func,
         removeTarget: PropTypes.func,
     }
-    
+
     constructor(props) {
         super(props);
         // 延时三秒执行 添加banner
-        setTimeout(()=> {
-            let list = [...data.list];
-            list.unshift({
-                type:'bannerList', 
-                list:[
-                require('../data/images/banner/big_camera.png'),
-                require('../data/images/banner/lamp_banner.png'), 
-                require('../data/images/banner/quite_control.png')]});
-            this.setState({ds: this.state.ds.cloneWithRows(list)});
-        }, 3000);
+        // setTimeout(()=> {
+        //     let list = [...data.list];
+        //     list.unshift({
+        //         type:'bannerList',
+        //         list:[
+        //         require('../data/images/banner/big_camera.png'),
+        //         require('../data/images/banner/lamp_banner.png'),
+        //         require('../data/images/banner/quite_control.png')]});
+        //     this.setState({ds: this.state.ds.cloneWithRows(list)});
+        // }, 3000);
     }
 
     componentWillMount() {
@@ -75,7 +97,7 @@ class Explore extends Component {
                         this.onCommitClickShopCell(rowData);
                     }}/>
                 )
-            case 'long': 
+            case 'long':
                 return (
                     <ShopLongCell {...rowData} onPress={() => {
                         this.onCommitClickShopCell(rowData);
@@ -83,9 +105,9 @@ class Explore extends Component {
                 );
             case 'bannerList':
                 return (
-                    <ShopBanner  
-                    animate 
-                    list={rowData.list} 
+                    <ShopBanner
+                    animate
+                    list={rowData.list}
                     tintColor={'#262628'}
                     duration={2000} />
                 );

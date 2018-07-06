@@ -1,0 +1,42 @@
+{
+  "name": "dppush",
+  "version": "1.0.0",
+  "description": "a tool base on react-native-pushy",
+  "main": "local-cli/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "dppush": "local-cli/index.js"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.5.1",
+    "babel-eslint": "^4.1.6",
+    "babel-plugin-syntax-async-functions": "^6.5.0",
+    "babel-plugin-syntax-object-rest-spread": "^6.5.0",
+    "babel-plugin-transform-async-to-generator": "^6.3.13",
+    "babel-plugin-transform-es2015-arrow-functions": "^6.5.2",
+    "babel-plugin-transform-es2015-destructuring": "^6.3.15",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.3.16",
+    "babel-plugin-transform-es2015-parameters": "^6.5.0",
+    "babel-plugin-transform-es2015-spread": "^6.5.2",
+    "babel-plugin-transform-object-rest-spread": "^6.5.0",
+    "babel-plugin-transform-strict-mode": "^6.5.2"
+  },
+  "dependencies": {
+    "cli-arguments": "^0.2.1",
+    "fs-promise": "^0.4.1",
+    "ipa-metadata": "^1.4.0",
+    "isomorphic-fetch": "^2.2.1",
+    "mkdir-recursive": "^0.2.1",
+    "node-apk-parser": "^0.2.3",
+    "progress": "^1.1.8",
+    "read": "^1.0.7",
+    "request": "^2.69.0",
+    "rimraf": "^2.5.2",
+    "yauzl": "2.4.1",
+    "yazl": "2.3.0"
+  },
+  "author": "react-native-pushy",
+  "license": "MIT"
+}
