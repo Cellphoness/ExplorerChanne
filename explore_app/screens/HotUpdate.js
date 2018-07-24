@@ -27,8 +27,20 @@ import React, {
 
   import _updateConfig from '../../update.json';
   const {appKey} = _updateConfig[Platform.OS];
+  import { NavigatorButtonItem as ButtonItems } from '../components/NavigatorButtonItem';
+  import {NativeAppEventEmitter} from 'react-native';
 
   export default class MyProject extends Component {
+    static navigationOptions = ({ navigation }) => ({
+      headerTitle: 'DPPUSH HotUpdate',
+      headerLeft: (
+          <ButtonItems
+              tintColor = {'#000000'}
+              onPress = { () => {navigation.goBack()} }
+              source={require('../components/NavigatorButtonItem/images/scan-icon-close.png')}
+          />)
+    });
+
     componentWillMount(){
       if (isFirstTime) {
         Alert.alert('提示', '这是当前版本第一次启动,是否要模拟启动失败?失败将回滚到上一版本', [
@@ -38,7 +50,27 @@ import React, {
       } else if (isRolledBack) {
         Alert.alert('提示', '刚刚更新失败了,版本被回滚.');
       }
+
+      this.downloadListener = NativeAppEventEmitter.addListener('RCTHotUpdateDownloadProgress',(params)=>{
+        console.log('RCTHotUpdateDownloadProgress');
+        console.log(params);
+
+        //hashname total(-1) received(B 字节) 在checkUpdate里面拿吧 KB
+      })
+      
+      this.unzipListener = NativeAppEventEmitter.addListener('RCTHotUpdateUnzipProgress',(params)=>{
+        console.log('RCTHotUpdateUnzipProgress');
+        console.log(params);
+
+        //hashname total received
+      })
     }
+    
+    componentWillUnmount(){
+      this.downloadListener&&this.downloadListener.remove();
+      this.unzipListener&&this.unzipListener.remove();
+    } 
+
     doUpdate = info => {
       downloadUpdate(info).then(hash => {
         Alert.alert('提示', '下载完毕,是否重启应用?', [
@@ -67,7 +99,8 @@ import React, {
           ]);
         }
       }).catch(err => {
-        Alert.alert('提示', '更新失败.');
+        Alert.alert('获取更新失败', err.message);
+        console.log(err);
       });
     };
     render() {

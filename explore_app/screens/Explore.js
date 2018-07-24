@@ -54,6 +54,8 @@ class Explore extends Component {
         //         require('../data/images/banner/quite_control.png')]});
         //     this.setState({ds: this.state.ds.cloneWithRows(list)});
         // }, 3000);
+
+        //如果不是延时操作 设置无效
     }
 
     componentWillMount() {
@@ -70,7 +72,15 @@ class Explore extends Component {
     }
 
     componentDidMount() {
-        this.setState({ds: this.state.ds.cloneWithRows(data.list)});
+        // this.setState({ds: this.state.ds.cloneWithRows(data.list)});
+        let list = [...data.list];
+        list.unshift({
+            type:'bannerList',
+            list:[
+            require('../data/images/banner/big_camera.png'),
+            require('../data/images/banner/lamp_banner.png'),
+            require('../data/images/banner/quite_control.png')]});
+        this.setState({ds: this.state.ds.cloneWithRows(list)});
     }
 
     onCommitClickShopCell = (rowData) => {

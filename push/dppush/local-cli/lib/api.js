@@ -2,10 +2,10 @@
 
 let query = function () {
   var _ref4 = _asyncToGenerator(function* (url, options) {
-    console.log('url:', url);
+    // console.log('url:', url);
     const resp = yield fetch(url, options);
     const json = yield resp.json();
-    console.log('json:', json);
+    // console.log('json:', json);
     if (resp.status !== 200) {
       throw Object.assign(new Error(json.message || json.error), { status: resp.status });
     }
@@ -19,19 +19,11 @@ let query = function () {
 
 let uploadFile = function () {
   var _ref5 = _asyncToGenerator(function* (fn) {
-    // var _ref6 = yield exports.post('/upload', {});
 
-    // const url = _ref6.url,
-    //       fieldName = _ref6.fieldName,
-    //       formData = _ref6.formData;
-    const url = 'http://localhost:5000/file/upload',
-    fieldName = 'file',
+    const url = host + '/file/upload',
+    // fieldName = 'file',
     formData = {ok:1, test:'200'};
     let realUrl = url;
-
-    // if (!/^https?\:\/\//.test(url)) {
-    //   realUrl = host + url;
-    // }
     console.log(realUrl);
 
     const fileSize = (yield fs.stat(fn)).size;
@@ -57,9 +49,6 @@ let uploadFile = function () {
         if (resp.statusCode > 299) {
           return reject(Object.assign(new Error(body), { status: resp.statusCode }));
         }
-        console.log('body');
-        console.log(body);
-        console.log('SON.parse body');
         console.log(JSON.parse(body));
         resolve(JSON.parse(body));
       });
@@ -95,7 +84,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  */
 
 const fetch = require('isomorphic-fetch');
-let host = 'http://localhost:5000';//process.env.PUSHY_REGISTRY || 'http://update.reactnative.cn/api';
+let host = 'https://frozen-scrubland-23823.herokuapp.com'; //'http://localhost:5000'; //process.env.PUSHY_REGISTRY || 'http://update.reactnative.cn/api';
 const fs = require('fs-promise');
 
 
@@ -138,7 +127,7 @@ exports.closeSession = _asyncToGenerator(function* () {
     savedSession = undefined;
   }
   session = undefined;
-  host = process.env.PUSHY_REGISTRY || 'http://update.reactnative.cn';
+  // host = process.env.PUSHY_REGISTRY || 'http://update.reactnative.cn';
 });
 
 function queryWithoutBody(method) {

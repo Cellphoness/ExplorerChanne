@@ -1,12 +1,36 @@
 var express      = require('express')
 var db           = require('../db')
 var paramCheck   = require('./check')
-var { Log }      = require('./middleware')
+var {Log, Auth}  = require('./middleware')
 var crypto       = require('crypto')
+const {rmdirSync} = require('../util')
+
 var router       = express.Router()
 
 // 该路由使用的中间件
 router.use(Log('version'));
+router.use(Auth);
+
+router.get('/list', (req, res, next) => {
+    let {appId} = req.query
+    if (paramCheck({appId}, res)) {
+        db.queryById(appId, ({val, app, msg}) => {
+            if (val) {
+                db.queryVersionByAppid(app.appId, ({val, data}) => {
+                    if (val === true) {
+                        res.send({success:1, data})
+                    } else {
+                        res.send({success:0, msg:data})
+                        next(data)
+                    }
+                })
+            } else {
+                res.send({success:0, msg})
+                next(msg)
+            }
+        })
+    }
+})
 
 router.post('/exists', (req, res, next) => {
     let {version, appId} = req.body
@@ -29,6 +53,7 @@ router.post('/exists', (req, res, next) => {
     }
 })
 
+//只允许单项修改 hash / expired (不建议单独修改hash，如需修改请调用bundle/update)
 router.post('/update', (req, res, next) => {
     let {version, appId, hash, expired} = req.body
     if (paramCheck({version, appId})) {
@@ -42,16 +67,13 @@ router.post('/update', (req, res, next) => {
                 if (val === true) {
                     if (count !== 0) {
                         if (hash) {
-                            db.updateHashByVersionId(versionId, hash, ({val, msg}) => {
-                                if (val === true) {
-                                    res.send({success:1, versionId})
-                                } else {
-                                    res.send({success:0, msg})
-                                    next(msg)
-                                }
+                            db.updateHashByVersionId(versionId, hash).then(() => {
+                                res.send({success:1, versionId})
+                            }).catch(err => {
+                                res.send({success:0, err})
+                                next(err)
                             })
-                        }
-                        if (expired === '1') {
+                        } else if (expired === '1') {
                             db.queryVersionByAppid(appId, ({val, data}) => {
                                 if (val === true) {
                                     var rawList = data.list
@@ -121,11 +143,11 @@ router.post('/create', (req, res, next) => {
         var h = crypto.createHash('md5')
         h.update(appId + version)
         var versionId = h.digest('hex')
-        db.createVersion(versionId, appId, version, ({val, msg}) => {
+        db.createVersion(versionId, appId, version, ({val, msg, id}) => {
             if (val === true) {
-                res.send({success:1, versionId})
+                res.send({success:1, versionId, id})
             } else {
-                if (msg.errno == 19) {
+                if (msg.code === '23505') {
                     var message = 'version with vserionId ' + versionId + ' alredy exits'
                     console.log(message)
                     res.send({success:0, msg:message})
@@ -144,14 +166,20 @@ router.post('/delete', (req, res, next) => {
         var h = crypto.createHash('md5')
         h.update(appId + version)
         var versionId = h.digest('hex')
-        db.deleteByVersionId(versionId, ({val, msg}) => {
-            if (val === true) {
-                res.send({success:1, versionId})
-            } else {
-                res.send({success:0, msg})
-                next(msg)
-            }
+        db.clearBundleByVersion(appId, version)
+        .then(() => {
+            db.deleteByVersionId(versionId, ({val, msg}) => {
+                if (val === true) {
+                    res.send({success:1, versionId})
+                } else {
+                    res.send({success:0, msg})
+                    next(msg)
+                }
+            })
         })
+        .catch(err => {
+            res.send({success:0, msg:err})
+        })   
     }
 })
 

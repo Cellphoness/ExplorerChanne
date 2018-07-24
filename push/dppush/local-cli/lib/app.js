@@ -52,15 +52,18 @@ let listApp = exports.listApp = function () {
 let chooseApp = exports.chooseApp = function () {
   var _ref4 = _asyncToGenerator(function* (platform) {
     const list = yield listApp(platform);
-
-    while (true) {
-      const id = yield (0, _utils.question)('Enter appId:');
-      const app = list.find(function (v) {
-        return v.id === (id | 0);
-      });
-      if (app) {
-        return app;
+    if (list && list.length > 0) {
+      while (true) {
+        const id = yield (0, _utils.question)('Enter appId:');
+        const app = list.find(function (v) {
+          return v.id === (id | 0);
+        });
+        if (app) {
+          return app;
+        }
       }
+    } else {
+      return null
     }
   });
 
@@ -110,22 +113,23 @@ const commands = exports.commands = {
       const name = options.name || (yield (0, _utils.question)('App Name:'));
       const downloadUrl = options.downloadUrl || (yield (0, _utils.question)('App downloadUrl:'));
       const platform = checkPlatform(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
-
       var _ref7 = yield post('/app/create', { name, platform, downloadUrl });
-
       const id = _ref7.id;
-
-      console.log(`Created app ${id}`);
-      yield this.selectApp({
-        args: [id],
-        options: { platform, downloadUrl }
-      });
+      if (id) {
+        console.log(`Created app ${id}`);
+        yield this.selectApp({
+          args: [id],
+          options: { platform, downloadUrl }
+        });
+      } else {
+        console.log(`App with name ${name} alredy exits`)
+      }
     });
-
     return function createApp(_x4) {
       return _ref5.apply(this, arguments);
     };
   }(),
+
   deleteApp: function () {
     var _ref8 = _asyncToGenerator(function* (_ref9) {
       let args = _ref9.args,
@@ -163,11 +167,35 @@ const commands = exports.commands = {
       let options = _ref11.options;
       const platform = options.platform;
 
-      listApp(platform);
+      yield listApp(platform);
     });
 
     return function apps(_x6) {
       return _ref10.apply(this, arguments);
+    };
+  }(),
+  updateDownloadUrl: function () {
+    var _ref21 = _asyncToGenerator(function* (_ref13) {
+      let options = _ref13.options;
+      
+      const platform = checkPlatform(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
+      const data = yield getSelectedApp(platform);
+      let appId;
+      if (data) {
+        appId = data.appKey;
+      } else {
+        appId = (yield chooseApp(platform)).appKey
+      }
+      const downloadUrl = options.downloadUrl || (yield (0, _utils.question)('App downloadUrl:'));
+      var _ref41 = yield post(`/app/update`,{appId, downloadUrl});
+      if (_ref41.success == 1) {
+        console.log('OK');
+      } else {
+        console.log(_ref41.msg)
+      }
+    });
+    return function updateDownloadUrl(_x21) {
+      return _ref21.apply(this, arguments);
     };
   }(),
   selectApp: function () {
@@ -176,8 +204,17 @@ const commands = exports.commands = {
           options = _ref13.options;
 
       const platform = checkPlatform(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
-      const id = args[0] || (yield chooseApp(platform)).id;
 
+      let id = args[0];
+      if (!id) {
+        const app = yield chooseApp(platform);
+        if (!app) {
+          console.log('No App to choose, you can use dppush createApp')
+          return;
+        } else {
+          id = app.id
+        } 
+      }
       let updateInfo = {};
       if (yield fs.exists('update.json')) {
         try {
@@ -187,9 +224,8 @@ const commands = exports.commands = {
           throw e;
         }
       }
-
       var _ref14 = yield post(`/app/appId/`,{id});
-
+      
       const appKey = _ref14.appKey;
 
       updateInfo[platform] = {

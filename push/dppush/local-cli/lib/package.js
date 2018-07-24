@@ -3,40 +3,14 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.commands = exports.choosePackage = exports.listPackage = undefined;
-
-let listPackage = exports.listPackage = function () {
-  var _ref = _asyncToGenerator(function* (appId) {
-    var _ref2 = yield get(`/app/${appId}/package/list?limit=1000`);
-
-    const data = _ref2.data;
-
-    for (const pkg of data) {
-      const version = pkg.version;
-
-      let versionInfo = '';
-      if (version) {
-        versionInfo = ` - ${version.id} ${version.hash.slice(0, 8)} ${version.name}`;
-      } else {
-        versionInfo = ' (newest)';
-      }
-      console.log(`${pkg.id}) ${pkg.name}(${pkg.status})${versionInfo}`);
-    }
-    console.log(`\nTotal ${data.length} packages.`);
-    return data;
-  });
-
-  return function listPackage(_x) {
-    return _ref.apply(this, arguments);
-  };
-}();
+exports.commands = exports.choosePackage = exports.listPackage = exports.updatePackage = undefined;
 
 let choosePackage = exports.choosePackage = function () {
   var _ref3 = _asyncToGenerator(function* (appId) {
     const list = yield listPackage(appId);
 
     while (true) {
-      const id = yield (0, _utils.question)('Enter packageId:');
+      const id = yield (0, _utils.question)('Enter versionId:');
       const app = list.find(function (v) {
         return v.id === (id | 0);
       });
@@ -48,6 +22,42 @@ let choosePackage = exports.choosePackage = function () {
 
   return function choosePackage(_x2) {
     return _ref3.apply(this, arguments);
+  };
+}();
+
+let listPackage = exports.listPackage = function () {
+  var _ref = _asyncToGenerator(function* (appId) {
+    var _ref2 = yield get(`/version/list?appId=${appId}`);
+    if (_ref2.success === 1) {
+      const data = _ref2.data.list;
+      for (const pkg of data) {
+        console.log(`${pkg.id}) appId:${pkg.appId} ver:${pkg.version} using bundle hash:${pkg.hash} (expired:${pkg.expired}) `);
+      }
+      console.log(`\nTotal ${data.length} packages version.`);
+      return data;
+    } else {
+      console.log('Error:'+_ref2.msg);
+      return null;
+    }
+  });
+
+  return function listPackage(_x) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+let updatePackage = exports.updatePackage = function () {
+  var _ref = _asyncToGenerator(function* ({hash, expired, versionId}) {
+    var _ref2 = yield post(`/version/update`, {hash, expired, versionId});
+    if (_ref2.success === 1) {
+      console.log('VersionId: '+ versionId + ' has update hash to ' + _ref2.hash)
+    } else {
+      console.log('Error:'+_ref2.msg);
+    }
+  });
+
+  return function updatePackage(_x) {
+    return _ref.apply(this, arguments);
   };
 }();
 
@@ -64,41 +74,36 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 var _require = require('./api');
 
 const get = _require.get,
-      post = _require.post,
-      uploadFile = _require.uploadFile;
+      post = _require.post;
+
 const commands = exports.commands = {
   createPackageVersion: function () {
     var _ref4 = _asyncToGenerator(function* (_ref5) {
-      let args = _ref5.args;
-      
-      const name = options.name || (yield (0, _utils.question)('App Name:'));
-      
-      
-      const fn = args[0];
-      if (!fn) {
-        throw new Error('Usage: pushy uploadIpa <ipaFile>');
+      // let args = _ref5.args;
+      let options = _ref5.options;
+
+      const platform = (0, _app.checkPlatform)(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
+      var _ref6 = yield (0, _app.getSelectedApp)(platform);
+      const version = options.version || (yield (0, _utils.question)('Package Version Name:'));
+      const appId = _ref6.appKey;
+      if (!version || !appId) {
+        console.log('Canceled');
+      } else {
+        var _ref8 = yield post(`/version/create`, {
+          appId,
+          version
+        });
+        if (_ref8.success === 1) {
+          const id = _ref8.id;
+          console.log(platform + ' AppKey: ' + appId.slice(0, 8) + ' Package Version: ' + version + ` Version Id: ${id}`);
+        } else {
+          console.log('create version fail');
+          console.log(_ref8.msg);
+        }
       }
-      // const name = yield (0, _utils.getIPAVersion)(fn);
-
-      // var _ref6 = yield (0, _app.getSelectedApp)('ios');
-
-      // const appId = _ref6.appId;
-
-      var _ref7 = yield uploadFile(fn);
-
-      const hash = _ref7.hash;
-
-      var _ref8 = yield post(`/app/${appId}/package/create`, {
-        name,
-        hash
-      });
-
-      const id = _ref8.id;
-
-      console.log(`Ipa uploaded: ${id}`);
     });
 
-    return function uploadIpa(_x3) {
+    return function createPackageVersion(_x3) {
       return _ref4.apply(this, arguments);
     };
   }(),
@@ -118,5 +123,77 @@ const commands = exports.commands = {
     return function packages(_x5) {
       return _ref14.apply(this, arguments);
     };
-  }()
+  }(),
+  deletePkg: function () {
+    var _ref18 = _asyncToGenerator(function* (_ref15) {
+      let options = _ref15.options;
+
+      const platform = (0, _app.checkPlatform)(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
+
+      var _ref16 = yield (0, _app.getSelectedApp)(platform);
+
+      const appId = _ref16.appId;
+
+      var data = yield listPackage(appId);
+
+      if (data) {
+        const id = options.version || (yield (0, _utils.question)('Package Version ID you want to delete:'));
+        var pkg = data.find(v => v.id === (id | 0))
+        if (pkg) {
+          const {version, appId} = pkg
+          var result = yield post('/version/delete', {
+            version, 
+            appId
+          })
+          if (result.success === 1) {
+            console.log('OK')
+          } else {
+            console.log(result.msg)
+          }
+        } else {
+          console.log('Not match Version ID');
+        }
+      }
+    });
+    return function deletePkg(_x5) {
+      return _ref18.apply(this, arguments);
+    };
+  }(),
+  expiredPkg: function () {
+    var _ref18 = _asyncToGenerator(function* (_ref15) {
+      let options = _ref15.options;
+
+      const platform = (0, _app.checkPlatform)(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
+
+      var _ref16 = yield (0, _app.getSelectedApp)(platform);
+
+      const appId = _ref16.appId;
+
+      var data = yield listPackage(appId);
+
+      if (data) {
+        const id = options.version || (yield (0, _utils.question)('Package Version ID you want to expired:'));
+        var pkg = data.find(v => v.id === (id | 0))
+        if (pkg) {
+          const flag = (yield (0, _utils.question)('The expired status you want to set to 0/1:'));
+          const {version, appId} = pkg
+          var result = yield post('/version/update', {
+            version, 
+            appId,
+            expired:flag
+          })
+          if (result.success === 1) {
+            console.log('OK')
+          } else {
+            console.log(result.msg)
+          }
+        } else {
+          console.log('Not match Version ID');
+        }
+      }
+    });
+    return function deletePkg(_x5) {
+      return _ref18.apply(this, arguments);
+    };
+  }(),
 };

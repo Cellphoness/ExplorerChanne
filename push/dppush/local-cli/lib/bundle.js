@@ -429,14 +429,13 @@ const commands = exports.commands = {
 
 
       console.log('Bundling with React Native version: ', version);
-
       yield rmdir(realIntermedia);
       yield mkdir(realIntermedia);
 
       try {
         require(path.resolve('node_modules/react-native/packager/babelRegisterOnly'))([/private-cli\/src/, /local-cli/]);
       } catch (err) {
-        require('metro/src/babelRegisterOnly');
+        require(path.resolve('node_modules/metro/src/babelRegisterOnly'));
       }
 
       // This line fix issue #11

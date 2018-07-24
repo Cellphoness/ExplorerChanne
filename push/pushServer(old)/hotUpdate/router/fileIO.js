@@ -1,6 +1,4 @@
 var express      = require('express')
-// var db           = require('../db')
-// var paramCheck   = require('./check')
 var { Log }      = require('./middleware')
 var crypto       = require('crypto')
 var router       = express.Router()
@@ -49,40 +47,37 @@ router.post('/upload', upload.single('file'), function (req, res, next) {
     
     req.file = req.file;
     var tmp_path = req.file.path;
-    console.log(tmp_path);
 
-    /** The original name of the uploaded file
-         stored in the variable "originalname". **/
-    var target_path = 'uploads/' + req.file.originalname;
-
+    /** The original name of the uploaded file stored in the variable "originalname". **/
+    //  var target_path = 'uploads/' + req.file.originalname;
     /** A better way to copy the uploaded file. **/
-    console.log(target_path);
 
-
-    if (!fs.existsSync('uploads/')) {
-        fs.mkdirSync('uploads/');
-    }
-
+    var hash = crypto.createHash('md5');
     var src = fs.createReadStream(tmp_path);
-    var dest = fs.createWriteStream(target_path);
-    src.pipe(dest);
-    src.on('end', function() { 
-        fs.unlink(tmp_path, function(err) { 
-            if (err) {
-                console.log(err);
-            }
+
+    src.on('data', hash.update.bind(hash));
+    src.on('end', function () {
+        var hashName = hash.digest('hex')
+        if (!fs.existsSync('uploads/')) {
+            fs.mkdirSync('uploads/');
+        }
+        var target_path = 'uploads/' + hashName;
+
+        var src_write = fs.createReadStream(tmp_path);
+        var dest = fs.createWriteStream(target_path);
+        src_write.pipe(dest);
+        src_write.on('end', function() { 
+            fs.unlink(tmp_path, function(err) { 
+                if (err) {
+                    console.log(err);
+                }
+            });
+            res.send({hash:hashName})
         });
-        var rs = fs.createReadStream('currency/index.ios.jsbundle');
-        var hash = crypto.createHash('md5');
-        rs.on('data', hash.update.bind(hash));
-        rs.on('end', function () {
-            let hash = hash.digest('hex')
-            res.send({hash})
+        src_write.on('error', function(err) { 
+            res.send({err}); 
+            console.log(err);
         });
-    });
-    src.on('error', function(err) { 
-        res.send({err}); 
-        console.log(err);
     });
   })
 

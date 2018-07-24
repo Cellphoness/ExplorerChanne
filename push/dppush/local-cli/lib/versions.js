@@ -6,18 +6,20 @@ Object.defineProperty(exports, "__esModule", {
 exports.commands = undefined;
 
 let showVersion = function () {
-  var _ref = _asyncToGenerator(function* (appId, offset) {
-    var _ref2 = yield get(`/app/${appId}/version/list`);
+  var _ref = _asyncToGenerator(function* (appId, offset, version) {
+    var _ref2 = yield post(`/bundle/query`, {appId, version});
 
-    const data = _ref2.data,
-          count = _ref2.count;
+    const data = _ref2.data;
+          // count = _ref2.count;
 
     console.log(`Offset ${offset}`);
+    console.log('Total ' + data.length + ' versions');
     for (const version of data) {
-      let packageInfo = version.packages.slice(0, 3).map(function (v) {
-        return v.name;
+      let pkgs = Object.keys(version.packages)
+      let packageInfo = pkgs.sort().slice(0, 3).map(function (v) {
+        return v;
       }).join(', ');
-      const count = version.packages.length;
+      const count = pkgs.length;
       if (count > 3) {
         packageInfo += `...and ${count - 3} more`;
       }
@@ -26,33 +28,34 @@ let showVersion = function () {
       } else {
         packageInfo = `[${packageInfo}]`;
       }
-      console.log(`${version.id}) ${version.hash.slice(0, 8)} ${version.name} ${packageInfo}`);
+      console.log(`${version.id}) ${version.hash} ${version.name} metaInfo:${version.metaInfo} ${packageInfo}`);
+      // console.log(`${version.id}) ${version.hash.slice(0, 8)} ${version.name} metaInfo:${version.metaInfo} ${packageInfo}`);
     }
     return data;
   });
 
-  return function showVersion(_x, _x2) {
+  return function showVersion(_x, _x2, _x3) {
     return _ref.apply(this, arguments);
   };
 }();
 
 let listVersions = function () {
-  var _ref3 = _asyncToGenerator(function* (appId) {
+  var _ref3 = _asyncToGenerator(function* (appId, version) {
     let offset = 0;
-    while (true) {
-      yield showVersion(appId, offset);
-      const cmd = yield (0, _utils.question)('page Up/page Down/Begin/Quit(U/D/B/Q)');
-      switch (cmd.toLowerCase()) {
-        case 'u':
-          offset = Math.max(0, offset - 10);break;
-        case 'd':
-          offset += 10;break;
-        case 'b':
-          offset = 0;break;
-        case 'q':
-          return;
-      }
-    }
+    yield showVersion(appId, offset, version);//分页还没做好
+    // while (true) {
+    //   const cmd = yield (0, _utils.question)('page Up/page Down/Begin/Quit(U/D/B/Q)');
+    //   switch (cmd.toLowerCase()) {
+    //     case 'u':
+    //       offset = Math.max(0, offset - 10);break;
+    //     case 'd':
+    //       offset += 10;break;
+    //     case 'b':
+    //       offset = 0;break;
+    //     case 'q':
+    //       return;
+    //   }
+    // }
   });
 
   return function listVersions(_x3) {
@@ -63,8 +66,8 @@ let listVersions = function () {
 let chooseVersion = function () {
   var _ref4 = _asyncToGenerator(function* (appId) {
     let offset = 0;
+    const data = yield showVersion(appId, offset);
     while (true) {
-      const data = yield showVersion(appId, offset);
       const cmd = yield (0, _utils.question)('Enter versionId or page Up/page Down/Begin(U/D/B)');
       switch (cmd.toLowerCase()) {
         case 'U':
@@ -129,13 +132,17 @@ const commands = exports.commands = {
 
       var _ref7 = yield (0, _app.getSelectedApp)(platform);
 
-      const appId = _ref7.appId;
-
+      const app_id = _ref7.appId;
+      var _ref18 = yield post(`/app/appId/`,{id:app_id});
+      var appId = _ref18.appKey;
+      
       var _ref8 = yield uploadFile(fn);
 
       const hash = _ref8.hash;
 
-      var _ref9 = yield post(`/app/${appId}/version/create`, {
+      var _ref9 = yield post(`/bundle/create`, {
+        platform,
+        appId,
         name: name || (yield (0, _utils.question)('Enter version name:')) || '(未命名)',
         hash,
         description: description || (yield (0, _utils.question)('Enter description:')),
@@ -143,12 +150,14 @@ const commands = exports.commands = {
       });
 
       const id = _ref9.id;
-
-      console.log(`Version published: ${id}`);
-
-      const v = yield (0, _utils.question)('Would you like to bind packages to this version?(Y/N)');
-      if (v.toLowerCase() === 'y') {
-        yield this.update({ args: [], options: { versionId: id, platform } });
+      if (id) {
+        console.log(`Version published: ${id}`);
+        const v = yield (0, _utils.question)('Would you like to bind packages to this version?(Y/N)');
+        if (v.toLowerCase() === 'y') {
+          yield this.update({ args: [hash], options: { versionId: id, platform } });
+        }
+      } else {
+        console.log('Error:'+_ref9.msg);
       }
     });
 
@@ -164,9 +173,24 @@ const commands = exports.commands = {
 
       var _ref12 = yield (0, _app.getSelectedApp)(platform);
 
-      const appId = _ref12.appId;
+      const appId = _ref12.appKey;
 
-      yield listVersions(appId);
+      const list = yield _package.listPackage(_ref12.appId)
+      
+      if (list == null || list.length == 0) {
+        console.log('app version count 0');
+      } else {
+        const id = yield (0, _utils.question)('Enter versionId:');
+        const version = list.find(function (v) {
+          return v.id === (id | 0);
+        });
+        if (version) {
+          yield listVersions(appId, version.version);
+        } else {
+          yield listVersions(appId);
+        }
+      }
+     
     });
 
     return function versions(_x6) {
@@ -182,18 +206,53 @@ const commands = exports.commands = {
 
       var _ref15 = yield (0, _app.getSelectedApp)(platform);
 
-      const appId = _ref15.appId;
+      const appId = _ref15.appKey;
 
-      const versionId = options.versionId || (yield chooseVersion(appId)).id;
-      const pkgId = options.packageId || (yield (0, _package.choosePackage)(appId)).id;
-      yield put(`/app/${appId}/package/${pkgId}`, {
-        versionId
+      const hash = args[0] || (yield chooseVersion(appId)).hash;
+      console.log('Bind the RN bundle to package version');
+      const version = options.version || (yield (0, _package.choosePackage)(_ref15.appId)).version;
+      const result = yield post(`/bundle/update`, {
+        version,
+        hash,
+        appId
       });
-      console.log('Ok.');
+      if (result.success === 1) {
+        console.log('Ok.');
+      } else {
+        console.log(result.msg)
+      }
     });
 
     return function update(_x7) {
       return _ref13.apply(this, arguments);
     };
-  }()
+  }(),
+  deleteVer: function () {
+    var _ref26 = _asyncToGenerator(function* (_ref16) {
+      let args = _ref16.args,
+          options = _ref16.options;
+
+      const platform = (0, _app.checkPlatform)(options.platform || (yield (0, _utils.question)('Platform(ios/android):')));
+
+      var _ref25 = yield (0, _app.getSelectedApp)(platform);
+
+      const appId = _ref25.appKey;
+
+      const hash = args[0] || (yield chooseVersion(appId)).hash;
+      console.log('delete version for hash '+hash);
+      
+      const result = yield post(`/bundle/delete`, {
+        hash,
+      });
+      if (result.success === 1) {
+        console.log('Ok.');
+      } else {
+        console.log(result.msg)
+      }
+    });
+
+    return function update(_x7) {
+      return _ref26.apply(this, arguments);
+    };
+  }(),
 };

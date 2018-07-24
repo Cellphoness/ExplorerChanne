@@ -13,9 +13,9 @@ export default StackNavigator(
         },
         HotUpdate: {
             screen: HotUpdate,
-            navigationOptions: ({ navigation }) => ({
-                headerTitle: 'HotUpdate',
-            })
+            // navigationOptions: ({ navigation }) => ({
+            //     headerTitle: 'HotUpdate',
+            // })
         }
     },
     {

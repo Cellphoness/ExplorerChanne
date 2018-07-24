@@ -21,24 +21,60 @@ function md5(str) {
 }
 
 exports.commands = {
+  register: function () {
+    var _ref1 = _asyncToGenerator(function* (_ref2) {
+      let args = _ref2.args;
+
+      const email = args[0] || (yield (0, _utils.question)('email:'));
+      const password = args[1] || (yield (0, _utils.question)('password:', true));
+      const name = args[2] || (yield (0, _utils.question)('name:'));
+
+      var _ref3 = yield post('/user/register', {
+        email,
+        password: md5(password),
+        name
+      });
+
+      const success = _ref3.success;
+
+      console.log(success)
+      if (success === 0) {
+        console.log(_ref3.msg);
+      } else {
+        const token = _ref3.token,
+        info = _ref3.info;
+        replaceSession({ token });
+        yield saveSession();
+        console.log(`Welcome, ${info.name}.`);
+      }
+    });
+
+    return function register(_x) {
+      return _ref1.apply(this, arguments);
+    };
+  }(),
   login: function () {
     var _ref = _asyncToGenerator(function* (_ref2) {
       let args = _ref2.args;
 
       const email = args[0] || (yield (0, _utils.question)('email:'));
-      const pwd = args[1] || (yield (0, _utils.question)('password:', true));
+      const password = args[1] || (yield (0, _utils.question)('password:', true));
 
       var _ref3 = yield post('/user/login', {
         email,
-        pwd: md5(pwd)
+        password: md5(password)
       });
 
-      const token = _ref3.token,
+      if (_ref3.success !== 1) {
+        console.log(_ref3.msg);
+      } else {
+        const token = _ref3.token,
             info = _ref3.info;
 
-      replaceSession({ token });
-      yield saveSession();
-      console.log(`Welcome, ${info.name}.`);
+        replaceSession({ token });
+        yield saveSession();
+        console.log(`Welcome, ${info.name}.`);
+      }
     });
 
     return function login(_x) {
@@ -59,7 +95,7 @@ exports.commands = {
     var _ref5 = _asyncToGenerator(function* () {
       const me = yield get('/user/me');
       for (const k in me) {
-        if (k !== 'ok') {
+        if (k !== 'success') {
           console.log(`${k}: ${me[k]}`);
         }
       }

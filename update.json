@@ -1,10 +1,10 @@
 {
-    "ios": {
-        "appId": 14161,
-        "appKey": "YoPKrUSNeXG5ItM0r9reBontMZliig71"
-    },
     "android": {
-        "appId": 13463,
-        "appKey": "zNJwPWFLCgMYvwGvUeITrYQs4T5MUPYF"
+        "appId": 2,
+        "appKey": "a46e9ae2d9650bfa03ff20d77245e6fc"
+    },
+    "ios": {
+        "appId": 1,
+        "appKey": "96010f266c645efeb42a48d58c21a8e0"
     }
 }

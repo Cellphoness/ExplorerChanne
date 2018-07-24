@@ -1,4 +1,5 @@
 var moment = require('moment')
+var util = require('../util')
 
 //内存有问题 闭包route
 const routeLog = function (route) {
@@ -22,5 +23,20 @@ const routeLog = function (route) {
     }
 }
 
+const authMiddleware = (req, res, next) => {
+    console.log('header');
+    console.log(req.headers['x-accesstoken']);
+    let token = req.headers['x-accesstoken'];
+    if (!token) {
+        res.status(401).send({msg:'Not authenticated'})
+    } else {
+        util.getUserId(req.headers['x-accesstoken'])
+        .then(userId => {
+            next();
+        }).catch(err => {
+            res.status(401).send({msg:'Not authenticated'})
+        });
+    } 
+}
 
-module.exports = {Log:routeLog}
+module.exports = {Log:routeLog, Auth:authMiddleware}

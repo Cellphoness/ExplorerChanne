@@ -9,6 +9,8 @@
     },
     "logout": {
     },
+    "register": {
+    },
     "me": {
     },
 
@@ -27,6 +29,16 @@
     },
     "apps": {
       "options": {
+        "platform": {
+          "hasValue": true
+        }
+      }
+    },
+    "updateDownloadUrl": {
+      "options": {
+        "downloadUrl": {
+          "hasValue": true
+        },
         "platform": {
           "hasValue": true
         }
@@ -55,7 +67,20 @@
         }
       }
     },
-
+    "deletePkg": {
+      "options": {
+        "platform": {
+          "hasValue": true
+        }
+      }
+    },
+    "expiredPkg": {
+      "options": {
+        "platform": {
+          "hasValue": true
+        }
+      }
+    },
     "publish": {
       "options": {
         "platform": {
@@ -79,16 +104,19 @@
         }
       }
     },
-
+    "deleteVer": {
+      "options": {
+        "platform": {
+          "hasValue": true
+        }
+      }
+    },
     "update": {
       "options": {
         "platform": {
           "hasValue": true
         },
-        "versionId": {
-          "hasValue": true
-        },
-        "packageId": {
+        "version": {
           "hasValue": true
         }
       }

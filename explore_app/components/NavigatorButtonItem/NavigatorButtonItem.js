@@ -11,6 +11,7 @@ class NavigatorButtonItem extends Component {
         right: PropTypes.bool,
         source: PropTypes.number,
         popDrawer: PropTypes.func,
+        tintColor: PropTypes.string
     }
 
     leftHandelr = () => {
@@ -23,7 +24,7 @@ class NavigatorButtonItem extends Component {
     }
 
     render() {
-      const { source, left, right, onPress } = this.props;
+      const { source, left, right, onPress, tintColor } = this.props;
       let handler;
       if (left == true) {
           handler = this.leftHandelr
@@ -35,7 +36,7 @@ class NavigatorButtonItem extends Component {
       return (
         <View style={styles.container}>
           <TouchableHighlight underlayColor={styles.$darkenGray} onPress={handler} style={styles.button}>
-              <Image resizeMode='contain' source={source} style={styles.icon} />
+              <Image resizeMode='contain' source={source} style={[styles.icon, {tintColor, width:15, height:15}]} />
           </TouchableHighlight>
         </View>
       )
